@@ -28,3 +28,8 @@ client, err := mongo.Connect(context.Background(),
 This will enable serialization from and to the standard UUID MongoDB type
 (specifically the binary subtype 0x04).  It will also attempt to 
 automatically parse strings.
+
+### Change History
+
+ - v0.1.0 - Initial release
+ - v0.1.1 - Fixed module cache issues

@@ -5,11 +5,8 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/bsoncodec"
-	"go.mongodb.org/mongo-driver/bson/bsonrw"
-	"go.mongodb.org/mongo-driver/bson/bsonrw/bsonrwtest"
-	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/x/bsonx/bsoncore"
 	"reflect"
 	"testing"
 )
@@ -20,41 +17,28 @@ func TestUUIDEncodeValue(t *testing.T) {
 	}
 
 	t.Run("encode", func(t *testing.T) {
-		var testCases = []struct {
-			name    string
-			value   reflect.Value
-			invoked bsonrwtest.Invoked
-			err     string
-		}{
-			{
-				name:    "success",
-				value:   reflect.ValueOf(uuid.MustParse("7b68db73-a514-460e-900a-b3f47bbc7eaa")),
-				invoked: bsonrwtest.WriteBinaryWithSubtype,
-				err:     "",
-			}, {
-				name:    "wrong type",
-				value:   reflect.ValueOf("wrong"),
-				invoked: bsonrwtest.Nothing,
-				err:     "UUIDEncodeValue can only encode valid uuid.UUID, but got string",
-			},
+		reg := BuildRegistry()
+
+		buf := new(bytes.Buffer)
+		vw := bson.NewDocumentWriter(buf)
+		enc := bson.NewEncoder(vw)
+		enc.SetRegistry(reg)
+
+		value := &UuidTest{
+			Id: uuid.MustParse("7b68db73-a514-460e-900a-b3f47bbc7eaa"),
 		}
 
-		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
-				vw := &bsonrwtest.ValueReaderWriter{}
+		err := enc.Encode(value)
+		assert.NoError(t, err)
 
-				reg := BuildRegistry()
-				enc := bsoncodec.ValueEncoderFunc(UUIDEncodeValue)
-				err := enc.EncodeValue(bsoncodec.EncodeContext{Registry: reg}, vw, tc.value)
+		binary, _ := value.Id.MarshalBinary()
+		doc := buildDocument(bsoncore.AppendBinaryElement(nil, "_id", bson.TypeBinaryUUID, binary))
+		assert.Equal(t, doc, buf.Bytes())
+	})
 
-				assert.Equal(t, tc.invoked, vw.Invoked)
-				if tc.err != "" {
-					assert.EqualError(t, err, tc.err)
-				} else {
-					assert.NoError(t, err)
-				}
-			})
-		}
+	t.Run("wrong type", func(t *testing.T) {
+		err := UUIDEncodeValue(bson.EncodeContext{}, nil, reflect.ValueOf("wrong"))
+		assert.EqualError(t, err, "UUIDEncodeValue can only encode valid uuid.UUID, but got string")
 	})
 
 	type UuidPtrTest struct {
@@ -65,17 +49,15 @@ func TestUUIDEncodeValue(t *testing.T) {
 		reg := BuildRegistry()
 
 		buf := new(bytes.Buffer)
-		vw, err := bsonrw.NewBSONValueWriter(buf)
-		assert.NoError(t, err)
-		enc, err := bson.NewEncoder(vw)
-		assert.NoError(t, err)
-		_ = enc.SetRegistry(reg)
+		vw := bson.NewDocumentWriter(buf)
+		enc := bson.NewEncoder(vw)
+		enc.SetRegistry(reg)
 
 		value := &UuidTest{
 			Id: uuid.MustParse("0F7D33CE-AF9F-4DDE-A4EC-ED630EAE74E2"),
 		}
 
-		err = enc.Encode(value)
+		err := enc.Encode(value)
 		assert.NoError(t, err)
 
 		binary, _ := value.Id.MarshalBinary()
@@ -87,17 +69,15 @@ func TestUUIDEncodeValue(t *testing.T) {
 		reg := BuildRegistry()
 
 		buf := new(bytes.Buffer)
-		vw, err := bsonrw.NewBSONValueWriter(buf)
-		assert.NoError(t, err)
-		enc, err := bson.NewEncoder(vw)
-		assert.NoError(t, err)
-		_ = enc.SetRegistry(reg)
+		vw := bson.NewDocumentWriter(buf)
+		enc := bson.NewEncoder(vw)
+		enc.SetRegistry(reg)
 
 		value := &UuidTest{
 			Id: uuid.UUID{},
 		}
 
-		err = enc.Encode(value)
+		err := enc.Encode(value)
 		assert.NoError(t, err)
 
 		doc := buildDocument(bsoncore.AppendNullElement(nil, "_id"))
@@ -108,18 +88,16 @@ func TestUUIDEncodeValue(t *testing.T) {
 		reg := BuildRegistry()
 
 		buf := new(bytes.Buffer)
-		vw, err := bsonrw.NewBSONValueWriter(buf)
-		assert.NoError(t, err)
-		enc, err := bson.NewEncoder(vw)
-		assert.NoError(t, err)
-		_ = enc.SetRegistry(reg)
+		vw := bson.NewDocumentWriter(buf)
+		enc := bson.NewEncoder(vw)
+		enc.SetRegistry(reg)
 
 		v := uuid.MustParse("0F7D33CE-AF9F-4DDE-A4EC-ED630EAE74E2")
 		value := &UuidPtrTest{
 			Id: &v,
 		}
 
-		err = enc.Encode(value)
+		err := enc.Encode(value)
 		assert.NoError(t, err)
 
 		binary, _ := value.Id.MarshalBinary()
@@ -131,17 +109,15 @@ func TestUUIDEncodeValue(t *testing.T) {
 		reg := BuildRegistry()
 
 		buf := new(bytes.Buffer)
-		vw, err := bsonrw.NewBSONValueWriter(buf)
-		assert.NoError(t, err)
-		enc, err := bson.NewEncoder(vw)
-		assert.NoError(t, err)
-		_ = enc.SetRegistry(reg)
+		vw := bson.NewDocumentWriter(buf)
+		enc := bson.NewEncoder(vw)
+		enc.SetRegistry(reg)
 
 		value := &UuidPtrTest{
 			Id: nil,
 		}
 
-		err = enc.Encode(value)
+		err := enc.Encode(value)
 		assert.NoError(t, err)
 
 		doc := buildDocument(bsoncore.AppendNullElement(nil, "_id"))
@@ -204,15 +180,14 @@ func TestUUIDDecodeValue(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				vr := bsonrw.NewBSONDocumentReader(tc.b)
-				dec, err := bson.NewDecoder(vr)
-				assert.NoError(t, err)
+				vr := bson.NewDocumentReader(bytes.NewReader(tc.b))
+				dec := bson.NewDecoder(vr)
 
 				reg := BuildRegistry()
-				_ = dec.SetRegistry(reg)
+				dec.SetRegistry(reg)
 
 				var result UuidTest
-				err = dec.Decode(&result)
+				err := dec.Decode(&result)
 				if tc.err == nil {
 					assert.NoError(t, err)
 				} else {
@@ -230,15 +205,14 @@ func TestUUIDDecodeValue(t *testing.T) {
 	t.Run("unmarshal pointer", func(t *testing.T) {
 		b := buildDocument(bsoncore.AppendBinaryElement(nil, "_id", bson.TypeBinaryUUID, []byte{
 			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0}))
-		vr := bsonrw.NewBSONDocumentReader(b)
-		dec, err := bson.NewDecoder(vr)
-		assert.NoError(t, err)
+		vr := bson.NewDocumentReader(bytes.NewReader(b))
+		dec := bson.NewDecoder(vr)
 
 		reg := BuildRegistry()
-		_ = dec.SetRegistry(reg)
+		dec.SetRegistry(reg)
 
 		var result UuidPtrTest
-		err = dec.Decode(&result)
+		err := dec.Decode(&result)
 		assert.NoError(t, err)
 		v := uuid.MustParse("FFFFFFFF-FFFF-FFFF-FFFF-000000000000")
 		expected := UuidPtrTest{Id: &v}
@@ -247,15 +221,14 @@ func TestUUIDDecodeValue(t *testing.T) {
 
 	t.Run("unmarshal null pointer", func(t *testing.T) {
 		b := buildDocument(bsoncore.AppendNullElement(nil, "_id"))
-		vr := bsonrw.NewBSONDocumentReader(b)
-		dec, err := bson.NewDecoder(vr)
-		assert.NoError(t, err)
+		vr := bson.NewDocumentReader(bytes.NewReader(b))
+		dec := bson.NewDecoder(vr)
 
 		reg := BuildRegistry()
-		_ = dec.SetRegistry(reg)
+		dec.SetRegistry(reg)
 
 		var result UuidPtrTest
-		err = dec.Decode(&result)
+		err := dec.Decode(&result)
 		assert.NoError(t, err)
 		expected := UuidPtrTest{Id: nil}
 		assert.Equal(t, expected, result)

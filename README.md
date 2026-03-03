@@ -12,24 +12,24 @@ binary representation.  Thus, bson-uuid was born.
 
 ### Installation
 ```
-go get -u github.com/vonix-networks/bsonuuid
+go get -u github.com/vonix-networks/bsonuuid/v2
 ```
 
 ### Deployment
-There is a builder for a quick replacement if this is the only change to 
+There is a builder for a quick replacement if this is the only change to
 the registry needed:
 
 ```
-client, err := mongo.Connect(context.Background(),
-    options.Client().ApplyURI("uri"),
-    options.Client().SetRegistry(bsonuuid.BuildRegistry()))
+client, err := mongo.Connect(options.Client().ApplyURI("uri").
+    SetRegistry(bsonuuid.BuildRegistry()))
 ```
 
 This will enable serialization from and to the standard UUID MongoDB type
-(specifically the binary subtype 0x04).  It will also attempt to 
+(specifically the binary subtype 0x04).  It will also attempt to
 automatically parse strings.
 
 ### Change History
 
  - v0.1.0 - Initial release
  - v0.1.1 - Fixed module cache issues
+ - v2.0.0 - Migrated to mongo-driver v2

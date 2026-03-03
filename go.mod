@@ -1,11 +1,11 @@
-module github.com/vonix-networks/bsonuuid
+module github.com/vonix-networks/bsonuuid/v2
 
 go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.4
-	go.mongodb.org/mongo-driver v1.12.1
+	go.mongodb.org/mongo-driver/v2 v2.5.0
 )
 
 require (

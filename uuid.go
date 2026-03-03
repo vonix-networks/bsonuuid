@@ -3,18 +3,16 @@ package bsonuuid
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/bsoncodec"
-	"go.mongodb.org/mongo-driver/bson/bsonrw"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"reflect"
 )
 
 var TypeUUID = reflect.TypeOf(uuid.UUID{})
 
 // UUIDEncodeValue attempts to marshal an uuid.UUID type into a MongoDB binary uuid type.
-func UUIDEncodeValue(_ bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
+func UUIDEncodeValue(_ bson.EncodeContext, vw bson.ValueWriter, val reflect.Value) error {
 	if !val.IsValid() || val.Type() != TypeUUID {
-		return bsoncodec.ValueEncoderError{Name: "UUIDEncodeValue", Types: []reflect.Type{TypeUUID}, Received: val}
+		return bson.ValueEncoderError{Name: "UUIDEncodeValue", Types: []reflect.Type{TypeUUID}, Received: val}
 	}
 
 	/// Zero val should emit null
@@ -29,9 +27,9 @@ func UUIDEncodeValue(_ bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val refle
 
 // UUIDDecodeValue attempts to unmarshal a string or a binary with subtype 0x00 (generic) or 0x04 (uuid) into an
 // uuid.UUID type.
-func UUIDDecodeValue(_ bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
+func UUIDDecodeValue(_ bson.DecodeContext, vr bson.ValueReader, val reflect.Value) error {
 	if !val.IsValid() || val.Type() != TypeUUID {
-		return bsoncodec.ValueDecoderError{Name: "UUIDDecodeValue", Types: []reflect.Type{TypeUUID}, Received: val}
+		return bson.ValueDecoderError{Name: "UUIDDecodeValue", Types: []reflect.Type{TypeUUID}, Received: val}
 	}
 
 	var err error

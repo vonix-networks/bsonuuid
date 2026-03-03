@@ -1,13 +1,12 @@
 package bsonuuid
 
 import (
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/bsoncodec"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func BuildRegistry() *bsoncodec.Registry {
+func BuildRegistry() *bson.Registry {
 	registry := bson.NewRegistry()
-	registry.RegisterTypeEncoder(TypeUUID, bsoncodec.ValueEncoderFunc(UUIDEncodeValue))
-	registry.RegisterTypeDecoder(TypeUUID, bsoncodec.ValueDecoderFunc(UUIDDecodeValue))
+	registry.RegisterTypeEncoder(TypeUUID, bson.ValueEncoderFunc(UUIDEncodeValue))
+	registry.RegisterTypeDecoder(TypeUUID, bson.ValueDecoderFunc(UUIDDecodeValue))
 	return registry
 }
